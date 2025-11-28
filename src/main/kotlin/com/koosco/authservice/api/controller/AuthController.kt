@@ -8,6 +8,7 @@ import com.koosco.authservice.application.usecase.RegisterUseCase
 import com.koosco.common.core.response.ApiResponse
 import io.swagger.v3.oas.annotations.Operation
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.ResponseCookie
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -36,7 +37,16 @@ class AuthController(private val registerUseCase: RegisterUseCase, private val l
     fun login(@RequestBody request: LoginRequest, response: HttpServletResponse): ApiResponse<Any> {
         val dto = loginUseCase.login(request.toDto())
 
-        response.addHeader("Authorization", "Bearer ${dto.accessToken}")
+        response.addHeader("Authorization", dto.accessToken)
+
+        val refreshTokenCookie = ResponseCookie.from("refreshToken", dto.refreshToken)
+            .httpOnly(true)
+            .secure(true)
+            .path("/")
+            .maxAge(dto.refreshTokenExpiresIn)
+            .sameSite("Strict")
+            .build()
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString())
 
         return ApiResponse.success()
     }

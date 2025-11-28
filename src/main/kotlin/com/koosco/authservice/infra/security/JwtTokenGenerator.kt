@@ -50,6 +50,7 @@ class JwtTokenGenerator(private val jwtProperties: JwtProperties) : TokenGenerat
         return AuthTokenDto(
             accessToken = accessToken,
             refreshToken = refreshToken,
+            refreshTokenExpiresIn = jwtProperties.refreshExpiration,
         )
     }
 
