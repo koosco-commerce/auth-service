@@ -1,0 +1,24 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: auth-service-pdb
+  namespace: commerce
+  labels:
+    app: auth-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: auth-service
+---
+# Alternative: use maxUnavailable instead
+# apiVersion: policy/v1
+# kind: PodDisruptionBudget
+# metadata:
+#   name: auth-service-pdb
+#   namespace: commerce
+# spec:
+#   maxUnavailable: 1
+#   selector:
+#     matchLabels:
+#       app: auth-service

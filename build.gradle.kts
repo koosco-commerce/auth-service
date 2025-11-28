@@ -50,6 +50,7 @@ dependencies {
 
     // spring boot
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     testImplementation("org.springframework.security:spring-security-test")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     implementation("com.koosco:common-core:0.0.3")
