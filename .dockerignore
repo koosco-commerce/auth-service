@@ -1,0 +1,38 @@
+# Gradle
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+gradle-wrapper.properties
+
+# IDE
+.idea
+*.iml
+*.ipr
+*.iws
+.vscode
+.DS_Store
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Kubernetes
+k8s/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yaml
+
+# Documentation
+README.md
+HELP.md
+
+# Local data
+mariadb_data/
+.h2/
+
+# Logs
+logs/
+*.log
