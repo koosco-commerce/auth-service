@@ -25,7 +25,7 @@ class JwtTokenGenerator(private val jwtProperties: JwtProperties) : TokenGenerat
         Keys.hmacShaKeyFor(secretBytes)
     }
 
-    override fun generateTokens(userId: Long, email: String): AuthTokenDto {
+    override fun generateTokens(userId: Long, email: String, roles: List<String>): AuthTokenDto {
         val now = Date()
         val accessTokenExpiration = Date(now.time + jwtProperties.expiration * 1000)
         val refreshTokenExpiration = Date(now.time + jwtProperties.refreshExpiration * 1000)
@@ -33,6 +33,7 @@ class JwtTokenGenerator(private val jwtProperties: JwtProperties) : TokenGenerat
         val accessToken = Jwts.builder()
             .subject(userId.toString())
             .claim("email", email)
+            .claim("roles", roles)
             .claim("type", "access")
             .issuedAt(now)
             .expiration(accessTokenExpiration)
