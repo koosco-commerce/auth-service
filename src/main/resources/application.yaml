@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: auth-service
+  profiles:
+    active: local
+  web:
+    resources:
+      add-mappings: false
+  jpa:
+    open-in-view: false
+
+springdoc:
+  swagger-ui:
+    enabled: ${SWAGGER_UI_ENABLED:true}
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    deep-linking: true
+  api-docs:
+    path: /v3/api-docs
+  show-actuator: ${SPRINGDOC_SHOW_ACTUATOR:true}
+
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTWhichShouldBeAtLeast256BitsLongToEnsureSecurityAndCompliance}
+  expiration: ${JWT_EXPIRATION:86400} # 24 hours in seconds
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800} # 7 days in seconds

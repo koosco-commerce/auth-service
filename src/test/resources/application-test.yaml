@@ -1,0 +1,4 @@
+jwt:
+  secret: myTestSecretKeyForJWTWhichShouldBeAtLeast256BitsLongToEnsureSecurityAndCompliance
+  expiration: 86400 # 24 hours in seconds
+  refresh-expiration: 604800 # 7 days in seconds
