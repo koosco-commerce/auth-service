@@ -42,4 +42,4 @@ out/
 ### Database ###
 .h2/
 mariadb_data/
-postgres_data/
+*_mariadb_data/
