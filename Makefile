@@ -1,4 +1,5 @@
-.PHONY: help build test clean docker-build docker-clean deploy-local deploy-dev deploy-prod validate k8s-status k8s-logs k8s-clean gradle-build gradle-clean
+.PHONY: help build test clean docker-build docker-clean deploy-local deploy-dev deploy-prod validate k8s-status k8s-logs k8s-clean gradle-build gradle-clean \
+	db-up db-down db-logs db-shell app-up app-down app-logs app-restart app-shell app-status
 
 # Default target
 .DEFAULT_GOAL := help
@@ -169,12 +170,12 @@ health-readiness: ## Check readiness probe
 # Database
 # ============================================
 
-db-up: ## Start local MariaDB
+db-up: ## Start local MariaDB only
 	@docker-compose up -d db
 	@echo "$(GREEN)✓ MariaDB started$(NC)"
 
-db-down: ## Stop local MariaDB
-	@docker-compose down
+db-down: ## Stop local MariaDB only
+	@docker-compose stop db
 	@echo "$(GREEN)✓ MariaDB stopped$(NC)"
 
 db-logs: ## Show MariaDB logs
@@ -182,6 +183,32 @@ db-logs: ## Show MariaDB logs
 
 db-shell: ## Connect to local MariaDB shell
 	@docker exec -it auth-mariadb mysql -uadmin -padmin1234 commerce-auth
+
+# ============================================
+# Local Application (Docker Compose)
+# ============================================
+
+app-up: ## Start application and MariaDB
+	@docker-compose up -d
+	@echo "$(GREEN)✓ Application and MariaDB started$(NC)"
+	@echo "Access at: http://localhost:8080"
+
+app-down: ## Stop application and MariaDB
+	@docker-compose down
+	@echo "$(GREEN)✓ Application and MariaDB stopped$(NC)"
+
+app-logs: ## Show application logs
+	@docker-compose logs -f app
+
+app-restart: ## Restart application
+	@docker-compose restart app
+	@echo "$(GREEN)✓ Application restarted$(NC)"
+
+app-shell: ## Open shell in application container
+	@docker exec -it auth-service /bin/sh
+
+app-status: ## Check application and database status
+	@docker-compose ps
 
 # ============================================
 # Flyway Management
