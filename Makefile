@@ -111,6 +111,28 @@ k8s-restart: ## Restart application deployment
 	@kubectl rollout restart deployment/auth-service -n commerce
 	@echo "$(GREEN)✓ Deployment restarted$(NC)"
 
+k8s-stop: ## Stop application (scale to 0)
+	@echo "$(YELLOW)Stopping application (scaling to 0)...$(NC)"
+	@kubectl scale deployment/auth-service -n commerce --replicas=0
+	@kubectl scale deployment/auth-service-mariadb -n commerce --replicas=0
+	@echo "$(GREEN)✓ Application stopped (replicas=0)$(NC)"
+
+k8s-start: ## Start application (scale to 2)
+	@echo "$(YELLOW)Starting application (scaling to 2)...$(NC)"
+	@kubectl scale deployment/auth-service -n commerce --replicas=2
+	@kubectl scale deployment/auth-service-mariadb -n commerce --replicas=1
+	@echo "$(GREEN)✓ Application started (replicas=2)$(NC)"
+
+k8s-scale: ## Scale application (usage: make k8s-scale REPLICAS=3)
+	@if [ -z "$(REPLICAS)" ]; then \
+		echo "$(RED)Error: REPLICAS not specified$(NC)"; \
+		echo "Usage: make k8s-scale REPLICAS=3"; \
+		exit 1; \
+	fi
+	@echo "$(YELLOW)Scaling application to $(REPLICAS) replicas...$(NC)"
+	@kubectl scale deployment/auth-service -n commerce --replicas=$(REPLICAS)
+	@echo "$(GREEN)✓ Application scaled to $(REPLICAS) replicas$(NC)"
+
 k8s-clean: ## Delete all Kubernetes resources
 	@echo "$(YELLOW)Deleting all resources from commerce namespace...$(NC)"
 	@kubectl delete deployment,svc,configmap,secret,hpa,pdb -n commerce -l app=auth-service 2>/dev/null || true
@@ -160,6 +182,57 @@ db-logs: ## Show MariaDB logs
 
 db-shell: ## Connect to local MariaDB shell
 	@docker exec -it auth-mariadb mysql -uadmin -padmin1234 commerce-auth
+
+# ============================================
+# Flyway Management
+# ============================================
+
+flyway-history: ## Show Flyway migration history (K8s)
+	@echo "$(GREEN)Flyway Migration History:$(NC)"
+	@kubectl exec deployment/auth-service-mariadb -n commerce -- \
+		mariadb -uadmin -padmin1234 commerce-auth \
+		-e "SELECT installed_rank, version, description, type, installed_on, execution_time, success FROM flyway_schema_history;" \
+		2>/dev/null || echo "$(RED)Error: Cannot connect to MariaDB$(NC)"
+
+flyway-history-local: ## Show Flyway migration history (Local)
+	@echo "$(GREEN)Flyway Migration History:$(NC)"
+	@docker exec auth-mariadb mariadb -uadmin -padmin1234 commerce-auth \
+		-e "SELECT installed_rank, version, description, type, installed_on, execution_time, success FROM flyway_schema_history;" \
+		2>/dev/null || echo "$(RED)Error: Cannot connect to local MariaDB$(NC)"
+
+flyway-clean: ## Clean failed Flyway migrations (K8s)
+	@echo "$(YELLOW)Cleaning failed Flyway migrations...$(NC)"
+	@kubectl exec deployment/auth-service-mariadb -n commerce -- \
+		mariadb -uadmin -padmin1234 commerce-auth \
+		-e "DELETE FROM flyway_schema_history WHERE success = 0;" \
+		2>/dev/null && echo "$(GREEN)✓ Failed migrations removed$(NC)" \
+		|| echo "$(RED)Error: Cannot clean migrations$(NC)"
+
+flyway-clean-local: ## Clean failed Flyway migrations (Local)
+	@echo "$(YELLOW)Cleaning failed Flyway migrations...$(NC)"
+	@docker exec auth-mariadb mariadb -uadmin -padmin1234 commerce-auth \
+		-e "DELETE FROM flyway_schema_history WHERE success = 0;" \
+		2>/dev/null && echo "$(GREEN)✓ Failed migrations removed$(NC)" \
+		|| echo "$(RED)Error: Cannot clean migrations$(NC)"
+
+flyway-reset: ## Reset Flyway history completely (K8s) - DANGEROUS!
+	@echo "$(RED)WARNING: This will delete ALL Flyway history!$(NC)"
+	@echo "$(YELLOW)Press Ctrl+C to cancel, or Enter to continue...$(NC)"
+	@read confirm
+	@kubectl exec deployment/auth-service-mariadb -n commerce -- \
+		mariadb -uadmin -padmin1234 commerce-auth \
+		-e "DROP TABLE IF EXISTS flyway_schema_history;" \
+		2>/dev/null && echo "$(GREEN)✓ Flyway history reset$(NC)" \
+		|| echo "$(RED)Error: Cannot reset Flyway$(NC)"
+
+flyway-reset-local: ## Reset Flyway history completely (Local) - DANGEROUS!
+	@echo "$(RED)WARNING: This will delete ALL Flyway history!$(NC)"
+	@echo "$(YELLOW)Press Ctrl+C to cancel, or Enter to continue...$(NC)"
+	@read confirm
+	@docker exec auth-mariadb mariadb -uadmin -padmin1234 commerce-auth \
+		-e "DROP TABLE IF EXISTS flyway_schema_history;" \
+		2>/dev/null && echo "$(GREEN)✓ Flyway history reset$(NC)" \
+		|| echo "$(RED)Error: Cannot reset Flyway$(NC)"
 
 # ============================================
 # Quick Commands
