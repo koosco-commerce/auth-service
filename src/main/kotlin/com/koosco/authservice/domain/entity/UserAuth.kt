@@ -1,5 +1,6 @@
 package com.koosco.authservice.domain.entity
 
+import com.koosco.authservice.domain.enums.UserRole
 import com.koosco.authservice.domain.vo.AuthProvider
 import com.koosco.authservice.domain.vo.Email
 import com.koosco.authservice.domain.vo.EncryptedPassword
@@ -33,6 +34,10 @@ class UserAuth(
     @Column(nullable = false)
     var password: EncryptedPassword,
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    val role: UserRole = UserRole.ROLE_USER,
+
     var refreshToken: String? = null,
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
@@ -40,13 +45,14 @@ class UserAuth(
     var updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
     companion object {
-        fun create(userId: Long, email: Email, password: EncryptedPassword, provider: AuthProvider?): UserAuth =
+        fun createUser(userId: Long, email: Email, password: EncryptedPassword, provider: AuthProvider?): UserAuth =
             UserAuth(
                 id = null,
                 userId = userId,
                 email = email,
                 provider = provider ?: AuthProvider.LOCAL,
                 password = password,
+                role = UserRole.ROLE_USER,
             )
     }
 

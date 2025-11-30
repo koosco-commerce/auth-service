@@ -17,7 +17,7 @@ class RegisterUseCase(private val authRepository: AuthRepository, private val pa
         val email = Email.of(dto.email)
         val encryptedPassword = EncryptedPassword.of(passwordEncoder.encode(dto.password))
 
-        val userAuth = UserAuth.create(
+        val userAuth = UserAuth.createUser(
             userId = dto.userId,
             email = email,
             password = encryptedPassword,

@@ -1,6 +1,5 @@
 package com.koosco.authservice.application.usecase
 
-import com.koosco.authservice.application.client.UserServiceClient
 import com.koosco.authservice.application.dto.AuthTokenDto
 import com.koosco.authservice.application.dto.LoginDto
 import com.koosco.authservice.application.repository.AuthRepository
@@ -16,22 +15,21 @@ class LoginUseCase(
     private val authRepository: AuthRepository,
     private val passwordEncoder: PasswordEncoder,
     private val tokenGenerator: TokenGenerator,
-    private val userServiceClient: UserServiceClient,
 ) {
     @Transactional
     fun login(toDto: LoginDto): AuthTokenDto {
         val userAuth = authRepository.findByEmail(toDto.email)
             ?: throw NotFoundException(AuthErrorCode.PROVIDER_USER_NOT_FOUND)
 
-        val encodedPassword = userAuth.password
+        if (!passwordEncoder.matches(toDto.password, userAuth.password.value)) {
+            throw NotFoundException(AuthErrorCode.PROVIDER_USER_NOT_FOUND)
+        }
 
-        passwordEncoder.matches(toDto.password, encodedPassword.value)
-            .takeIf { it }
-            ?: throw NotFoundException(AuthErrorCode.PROVIDER_USER_NOT_FOUND)
-
-        val userInfo = userServiceClient.getUserInfo(userAuth.userId)
-
-        val tokens = tokenGenerator.generateTokens(userAuth.userId, userAuth.email.value, userInfo.roles)
+        val tokens = tokenGenerator.generateTokens(
+            userId = userAuth.userId,
+            email = userAuth.email.value,
+            roles = listOf(userAuth.role.name),
+        )
 
         userAuth.storeRefreshToken(tokens.refreshToken)
 
