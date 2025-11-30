@@ -18,17 +18,19 @@ class LoginUseCase(
 ) {
     @Transactional
     fun login(toDto: LoginDto): AuthTokenDto {
-        val userAuth = (
-            authRepository.findByEmail(toDto.email)
-                ?: throw NotFoundException(AuthErrorCode.PROVIDER_USER_NOT_FOUND)
-            )
-
-        val encodedPassword = userAuth.password
-        passwordEncoder.matches(toDto.password, encodedPassword.value)
-            .takeIf { it }
+        val userAuth = authRepository.findByEmail(toDto.email)
             ?: throw NotFoundException(AuthErrorCode.PROVIDER_USER_NOT_FOUND)
 
-        val tokens = tokenGenerator.generateTokens(userAuth.userId, userAuth.email.value)
+        if (!passwordEncoder.matches(toDto.password, userAuth.password.value)) {
+            throw NotFoundException(AuthErrorCode.PROVIDER_USER_NOT_FOUND)
+        }
+
+        val tokens = tokenGenerator.generateTokens(
+            userId = userAuth.userId,
+            email = userAuth.email.value,
+            roles = listOf(userAuth.role.name),
+        )
+
         userAuth.storeRefreshToken(tokens.refreshToken)
 
         return tokens

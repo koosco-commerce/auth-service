@@ -43,6 +43,12 @@ repositories {
     }
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion")
+    }
+}
+
 dependencies {
     // kotlin
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
