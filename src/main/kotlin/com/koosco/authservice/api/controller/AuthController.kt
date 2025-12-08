@@ -6,6 +6,7 @@ import com.koosco.authservice.api.dto.request.toDto
 import com.koosco.authservice.application.usecase.LoginUseCase
 import com.koosco.authservice.application.usecase.RegisterUseCase
 import com.koosco.common.core.response.ApiResponse
+import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseCookie
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/auth")
 class AuthController(private val registerUseCase: RegisterUseCase, private val loginUseCase: LoginUseCase) {
 
+    @Hidden
     @Operation(
         summary = "사용자 인증 정보 등록 (user-service 호출)",
         description = "새로운 사용자의 인증 정보를 등록합니다.",
