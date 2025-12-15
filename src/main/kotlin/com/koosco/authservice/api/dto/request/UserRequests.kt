@@ -1,6 +1,6 @@
 package com.koosco.authservice.api.dto.request
 
-import com.koosco.authservice.application.dto.CreateUserDto
+import com.koosco.authservice.application.dto.CreateUserCommand
 import com.koosco.authservice.domain.vo.AuthProvider
 
 data class CreateUserRequest(
@@ -8,13 +8,13 @@ data class CreateUserRequest(
     val email: String,
     val password: String,
     val provider: AuthProvider? = null,
-)
-
-fun CreateUserRequest.toDto(): CreateUserDto = CreateUserDto(
-    userId = this.userId,
-    email = this.email,
-    password = this.password,
-    provider = this.provider,
-)
+) {
+    fun toCommand(): CreateUserCommand = CreateUserCommand(
+        userId = this.userId,
+        email = this.email,
+        password = this.password,
+        provider = this.provider,
+    )
+}
 
 data class DeleteUserRequest(val userId: Long)

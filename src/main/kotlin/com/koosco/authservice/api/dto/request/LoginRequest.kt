@@ -1,10 +1,10 @@
 package com.koosco.authservice.api.dto.request
 
-import com.koosco.authservice.application.dto.LoginDto
+import com.koosco.authservice.application.dto.LoginCommand
 
-data class LoginRequest(val email: String, val password: String)
-
-fun LoginRequest.toDto(): LoginDto = LoginDto(
-    email = this.email,
-    password = this.password,
-)
+data class LoginRequest(val email: String, val password: String) {
+    fun toCommand(): LoginCommand = LoginCommand(
+        email = this.email,
+        password = this.password,
+    )
+}
