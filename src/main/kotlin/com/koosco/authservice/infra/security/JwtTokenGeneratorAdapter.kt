@@ -1,7 +1,7 @@
 package com.koosco.authservice.infra.security
 
 import com.koosco.authservice.application.dto.AuthTokenDto
-import com.koosco.authservice.application.service.TokenGenerator
+import com.koosco.authservice.application.port.TokenGeneratorPort
 import com.koosco.authservice.infra.config.JwtProperties
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
@@ -11,7 +11,7 @@ import java.util.Date
 import javax.crypto.SecretKey
 
 @Component
-class JwtTokenGenerator(private val jwtProperties: JwtProperties) : TokenGenerator {
+class JwtTokenGeneratorAdapter(private val jwtProperties: JwtProperties) : TokenGeneratorPort {
     private val secretKey: SecretKey = run {
         require(jwtProperties.secret.isNotBlank()) {
             "JWT secret cannot be empty. Please set JWT_SECRET environment variable or use the default in application.yaml"
