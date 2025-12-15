@@ -2,7 +2,6 @@ package com.koosco.authservice.api.controller
 
 import com.koosco.authservice.api.dto.request.CreateUserRequest
 import com.koosco.authservice.api.dto.request.LoginRequest
-import com.koosco.authservice.api.dto.request.toDto
 import com.koosco.authservice.application.usecase.LoginUseCase
 import com.koosco.authservice.application.usecase.RegisterUseCase
 import com.koosco.common.core.response.ApiResponse
@@ -26,7 +25,7 @@ class AuthController(private val registerUseCase: RegisterUseCase, private val l
     )
     @PostMapping
     fun registerUser(@RequestBody request: CreateUserRequest): ApiResponse<Any> {
-        registerUseCase.register(request.toDto())
+        registerUseCase.execute(request.toCommand())
 
         return ApiResponse.success()
     }
@@ -37,7 +36,7 @@ class AuthController(private val registerUseCase: RegisterUseCase, private val l
     )
     @PostMapping("/login")
     fun login(@RequestBody request: LoginRequest, response: HttpServletResponse): ApiResponse<Any> {
-        val dto = loginUseCase.login(request.toDto())
+        val dto = loginUseCase.execute(request.toCommand())
 
         response.addHeader("Authorization", dto.accessToken)
 

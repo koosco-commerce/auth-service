@@ -1,7 +1,7 @@
 package com.koosco.authservice.application.usecase
 
 import com.koosco.authservice.application.dto.AuthTokenDto
-import com.koosco.authservice.application.dto.LoginDto
+import com.koosco.authservice.application.dto.LoginCommand
 import com.koosco.authservice.application.repository.AuthRepository
 import com.koosco.authservice.application.service.TokenGenerator
 import com.koosco.authservice.common.AuthErrorCode
@@ -17,7 +17,7 @@ class LoginUseCase(
     private val tokenGenerator: TokenGenerator,
 ) {
     @Transactional
-    fun login(toDto: LoginDto): AuthTokenDto {
+    fun execute(toDto: LoginCommand): AuthTokenDto {
         val userAuth = authRepository.findByEmail(toDto.email)
             ?: throw NotFoundException(AuthErrorCode.PROVIDER_USER_NOT_FOUND)
 

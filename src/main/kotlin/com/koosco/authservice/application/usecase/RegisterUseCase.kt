@@ -1,6 +1,6 @@
 package com.koosco.authservice.application.usecase
 
-import com.koosco.authservice.application.dto.CreateUserDto
+import com.koosco.authservice.application.dto.CreateUserCommand
 import com.koosco.authservice.application.repository.AuthRepository
 import com.koosco.authservice.domain.entity.UserAuth
 import com.koosco.authservice.domain.vo.Email
@@ -13,15 +13,15 @@ import org.springframework.transaction.annotation.Transactional
 class RegisterUseCase(private val authRepository: AuthRepository, private val passwordEncoder: PasswordEncoder) {
 
     @Transactional
-    fun register(dto: CreateUserDto) {
-        val email = Email.of(dto.email)
-        val encryptedPassword = EncryptedPassword.of(passwordEncoder.encode(dto.password))
+    fun execute(command: CreateUserCommand) {
+        val email = Email.of(command.email)
+        val encryptedPassword = EncryptedPassword.of(passwordEncoder.encode(command.password))
 
         val userAuth = UserAuth.createUser(
-            userId = dto.userId,
+            userId = command.userId,
             email = email,
             password = encryptedPassword,
-            provider = dto.provider,
+            provider = command.provider,
         )
 
         authRepository.save(userAuth)
