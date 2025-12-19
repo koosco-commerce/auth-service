@@ -1,5 +1,8 @@
-.PHONY: help build test clean docker-build docker-clean deploy-local deploy-dev deploy-prod validate k8s-status k8s-logs k8s-clean gradle-build gradle-clean \
-	db-up db-down db-logs db-shell app-up app-down app-logs app-restart app-shell app-status
+.PHONY: help jar build test clean docker-build docker-clean \
+        gradle-build gradle-test gradle-clean \
+        deploy-local deploy-dev deploy-prod validate \
+        k8s-status k8s-describe k8s-stop k8s-start k8s-scale k8s-clean \
+        flyway-history flyway-history-local flyway-clean flyway-clean-local flyway-reset flyway-reset-local
 
 # Default target
 .DEFAULT_GOAL := help
@@ -19,11 +22,6 @@ help: ## Show this help message
 	@echo "  GH_USER    - GitHub username (required for build)"
 	@echo "  GH_TOKEN   - GitHub token (required for build)"
 	@echo ""
-	@echo "$(GREEN)Examples:$(NC)"
-	@echo "  make test               # Local build and test"
-	@echo "  make deploy-local       # Deploy to local K8s"
-	@echo "  make k8s-logs           # View application logs"
-	@echo ""
 
 # ============================================
 # Local Development
@@ -38,13 +36,17 @@ clean: ## Clean up local containers and data
 	@docker-compose down -v
 	@echo "$(GREEN)✓ Cleanup complete$(NC)"
 
-docker-build: ## Build Docker image only
+jar: ## Build jar file with Gradle
+	@echo "$(YELLOW)Building jar file...$(NC)"
+	@./gradlew bootJar
+	@echo "$(GREEN)✓ Jar file built$(NC)"
+
+build: jar ## Build jar and Docker image
 	@echo "$(YELLOW)Building Docker image...$(NC)"
-	@docker build \
-		--build-arg GH_USER=${GH_USER} \
-		--build-arg GH_TOKEN=${GH_TOKEN} \
-		-t auth-service:latest .
+	@docker build -t auth-service:latest .
 	@echo "$(GREEN)✓ Image built: auth-service:latest$(NC)"
+
+docker-build: build ## Alias for build (deprecated, use 'make build')
 
 docker-clean: ## Remove Docker image
 	@docker rmi auth-service:latest 2>/dev/null || true
@@ -84,33 +86,29 @@ validate: ## Validate Kubernetes configurations
 # ============================================
 
 k8s-status: ## Show Kubernetes resources status
-	@echo "$(GREEN)Pods:$(NC)"
+	@echo "$(GREEN)Application Pods:$(NC)"
 	@kubectl get pods -n commerce -l app=auth-service
 	@echo ""
+	@echo "$(GREEN)MariaDB Pods:$(NC)"
+	@kubectl get pods -n commerce -l app=auth-service-mariadb
+	@echo ""
 	@echo "$(GREEN)Services:$(NC)"
-	@kubectl get svc -n commerce -l app=auth-service
+	@kubectl get svc -n commerce -l service=auth-service
 	@echo ""
 	@echo "$(GREEN)HPA:$(NC)"
-	@kubectl get hpa -n commerce
+	@kubectl get hpa -n commerce -l app=auth-service
 	@echo ""
-	@echo "$(GREEN)Deployments:$(NC)"
+	@echo "$(GREEN)Application Deployments:$(NC)"
 	@kubectl get deployments -n commerce -l app=auth-service
-
-k8s-logs: ## Show application logs
-	@kubectl logs -f deployment/auth-service -n commerce
-
-k8s-logs-db: ## Show MariaDB logs
-	@kubectl logs -f deployment/auth-service-mariadb -n commerce
+	@echo ""
+	@echo "$(GREEN)MariaDB Deployments:$(NC)"
+	@kubectl get deployments -n commerce -l app=auth-service-mariadb
+	@echo ""
+	@echo "$(GREEN)PVC (Persistent Volume Claims):$(NC)"
+	@kubectl get pvc -n commerce -l app=auth-service-mariadb
 
 k8s-describe: ## Describe pod (for debugging)
 	@kubectl describe pod -n commerce -l app=auth-service
-
-k8s-shell: ## Open shell in application pod
-	@kubectl exec -it deployment/auth-service -n commerce -- /bin/sh
-
-k8s-restart: ## Restart application deployment
-	@kubectl rollout restart deployment/auth-service -n commerce
-	@echo "$(GREEN)✓ Deployment restarted$(NC)"
 
 k8s-stop: ## Stop application (scale to 0)
 	@echo "$(YELLOW)Stopping application (scaling to 0)...$(NC)"
@@ -139,76 +137,6 @@ k8s-clean: ## Delete all Kubernetes resources
 	@kubectl delete deployment,svc,configmap,secret,hpa,pdb -n commerce -l app=auth-service 2>/dev/null || true
 	@kubectl delete deployment,svc,secret,pvc -n commerce -l app=auth-service-mariadb 2>/dev/null || true
 	@echo "$(GREEN)✓ Resources deleted$(NC)"
-
-# ============================================
-# Port Forwarding
-# ============================================
-
-port-forward: ## Forward application port to localhost:8080
-	@echo "$(GREEN)Forwarding port 8080...$(NC)"
-	@echo "Access at: http://localhost:8080"
-	@kubectl port-forward svc/auth-service 8080:80 -n commerce
-
-port-forward-db: ## Forward MariaDB port to localhost:3306
-	@echo "$(GREEN)Forwarding MariaDB port 3306...$(NC)"
-	@kubectl port-forward svc/auth-service-mariadb 3306:3306 -n commerce
-
-# ============================================
-# Health Checks
-# ============================================
-
-health: ## Check application health (requires port-forward)
-	@curl -s http://localhost:8080/actuator/health | jq
-
-health-liveness: ## Check liveness probe
-	@curl -s http://localhost:8080/actuator/health/liveness | jq
-
-health-readiness: ## Check readiness probe
-	@curl -s http://localhost:8080/actuator/health/readiness | jq
-
-# ============================================
-# Database
-# ============================================
-
-db-up: ## Start local MariaDB only
-	@docker-compose up -d db
-	@echo "$(GREEN)✓ MariaDB started$(NC)"
-
-db-down: ## Stop local MariaDB only
-	@docker-compose stop db
-	@echo "$(GREEN)✓ MariaDB stopped$(NC)"
-
-db-logs: ## Show MariaDB logs
-	@docker-compose logs -f db
-
-db-shell: ## Connect to local MariaDB shell
-	@docker exec -it auth-mariadb mysql -uadmin -padmin1234 commerce-auth
-
-# ============================================
-# Local Application (Docker Compose)
-# ============================================
-
-app-up: ## Start application and MariaDB
-	@docker-compose up -d
-	@echo "$(GREEN)✓ Application and MariaDB started$(NC)"
-	@echo "Access at: http://localhost:8080"
-
-app-down: ## Stop application and MariaDB
-	@docker-compose down
-	@echo "$(GREEN)✓ Application and MariaDB stopped$(NC)"
-
-app-logs: ## Show application logs
-	@docker-compose logs -f app
-
-app-restart: ## Restart application
-	@docker-compose restart app
-	@echo "$(GREEN)✓ Application restarted$(NC)"
-
-app-shell: ## Open shell in application container
-	@docker exec -it auth-service /bin/sh
-
-app-status: ## Check application and database status
-	@docker-compose ps
 
 # ============================================
 # Flyway Management
@@ -260,13 +188,3 @@ flyway-reset-local: ## Reset Flyway history completely (Local) - DANGEROUS!
 		-e "DROP TABLE IF EXISTS flyway_schema_history;" \
 		2>/dev/null && echo "$(GREEN)✓ Flyway history reset$(NC)" \
 		|| echo "$(RED)Error: Cannot reset Flyway$(NC)"
-
-# ============================================
-# Quick Commands
-# ============================================
-
-dev: clean test ## Clean and test (quick dev workflow)
-
-redeploy: k8s-clean deploy-local ## Clean and redeploy to local K8s
-
-check: k8s-status k8s-logs ## Check deployment status and logs
