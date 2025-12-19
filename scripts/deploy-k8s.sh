@@ -68,12 +68,16 @@ case ${ENVIRONMENT} in
         echo "  Token: ${GH_TOKEN:0:4}****"
         echo ""
 
+        # Gradle로 jar 빌드
+        echo "Building jar file with Gradle..."
+        cd ${PROJECT_DIR}
+        ./gradlew bootJar
+        echo -e "${GREEN}✓${NC} Jar built successfully"
+        echo ""
+
         # Docker 이미지 빌드
         echo "Building Docker image..."
-        docker build \
-          --build-arg GH_USER=${GH_USER} \
-          --build-arg GH_TOKEN=${GH_TOKEN} \
-          -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
+        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
         echo -e "${GREEN}✓${NC} Image built successfully"
         echo ""
 
@@ -92,17 +96,13 @@ case ${ENVIRONMENT} in
         echo -e "${GREEN}========================================${NC}"
         echo ""
         echo "Access application:"
-        echo "  - Application: http://localhost:8080"
-        echo "  - Swagger UI: http://localhost:8080/swagger-ui.html"
         echo "  - MariaDB: localhost:3306"
+        echo "  - App: Build and run the application locally"
         echo ""
         echo "Useful commands:"
-        echo "  - View app logs: docker-compose -f docker-compose.yaml logs -f app"
-        echo "  - View db logs: docker-compose -f docker-compose.yaml logs -f db"
-        echo "  - View all logs: docker-compose -f docker-compose.yaml logs -f"
+        echo "  - View logs: docker-compose -f docker-compose.yaml logs -f"
         echo "  - Stop: docker-compose -f docker-compose.yaml down"
         echo "  - Restart: docker-compose -f docker-compose.yaml restart"
-        echo "  - Check status: docker-compose -f docker-compose.yaml ps"
         echo ""
         exit 0
         ;;
@@ -158,12 +158,16 @@ case ${ENVIRONMENT} in
         echo "Target k3d cluster: ${CLUSTER_NAME}"
         echo ""
 
+        # Gradle로 jar 빌드
+        echo "Building jar file with Gradle..."
+        cd ${PROJECT_DIR}
+        ./gradlew bootJar
+        echo -e "${GREEN}✓${NC} Jar built successfully"
+        echo ""
+
         # Docker 이미지 빌드
         echo "Building Docker image..."
-        docker build \
-          --build-arg GH_USER=${GH_USER} \
-          --build-arg GH_TOKEN=${GH_TOKEN} \
-          -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
+        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
         echo -e "${GREEN}✓${NC} Image built successfully"
         echo ""
 
@@ -228,12 +232,16 @@ case ${ENVIRONMENT} in
         echo -e "${GREEN}✓${NC} SSH connection successful"
         echo ""
 
+        # Gradle로 jar 빌드
+        echo "Building jar file with Gradle..."
+        cd ${PROJECT_DIR}
+        ./gradlew bootJar
+        echo -e "${GREEN}✓${NC} Jar built successfully"
+        echo ""
+
         # Docker 이미지 빌드
         echo "Building Docker image..."
-        docker build \
-          --build-arg GH_USER=${GH_USER} \
-          --build-arg GH_TOKEN=${GH_TOKEN} \
-          -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
+        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
         echo -e "${GREEN}✓${NC} Image built successfully"
         echo ""
 

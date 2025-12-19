@@ -12,7 +12,7 @@ plugins {
 val springCloudVersion by extra("2025.0.0")
 
 group = "com.koosco"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.1"
 description = "auth-service"
 
 java {
@@ -123,3 +123,8 @@ allOpen {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+tasks.jar {
+    enabled = false
+}
+
